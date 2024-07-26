@@ -5,7 +5,7 @@
 	<Type>Automation</Type>
 	<Author>SKYLINE2\GBS</Author>
 	<CheckSets>FALSE</CheckSets>
-	<Folder></Folder>
+	<Folder>MediaOps/EVS Neuron</Folder>
 
 	<Protocols>
 	</Protocols>
