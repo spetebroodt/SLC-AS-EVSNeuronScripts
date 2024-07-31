@@ -10,7 +10,8 @@
 
 	public class PopUpDialog : Dialog
     {
-        private Dictionary<string, object[]> tableData = new Dictionary<string, object[]>();
+        private const int VideoPathTableId = 2300;
+        private IDmsElement dmsElement;
 
         public PopUpDialog(IEngine engine, string elementId) : base(engine)
         {
@@ -79,8 +80,8 @@
             var elementId = Convert.ToInt32(splittedElement[1]);
 
             var dms = engine.GetDms();
-            var dmsElement = dms.GetElement(new DmsElementId(dmaId, elementId));
-            tableData = (Dictionary<string, object[]>)dmsElement.GetTable(2300 /* Video Path */).GetData();
+            dmsElement = dms.GetElement(new DmsElementId(dmaId, elementId));
+            var tableData = (Dictionary<string, object[]>)dmsElement.GetTable(VideoPathTableId).GetData();
 
             if (tableData.Any())
             {
@@ -113,10 +114,12 @@
 
         internal void UpdateDialogData()
         {
-            var defaultRow = tableData.First();
-            this.FrameDelayTextBox.Text = Convert.ToString(defaultRow.Value[6]);
-            this.VerticalDelayTextBox.Text = Convert.ToString(defaultRow.Value[7]);
-            this.HorizontalDelayTextBox.Text = Convert.ToString(defaultRow.Value[8]);
+            var newDropdownValue = this.VideoPathDropDown.Selected;
+            var tableData = dmsElement.GetTable(VideoPathTableId).GetData();
+            var matchedRow = tableData[newDropdownValue];
+            this.FrameDelayTextBox.Text = Convert.ToString(matchedRow[6]);
+            this.VerticalDelayTextBox.Text = Convert.ToString(matchedRow[7]);
+            this.HorizontalDelayTextBox.Text = Convert.ToString(matchedRow[8]);
         }
 
         internal void ProcessSelectedData(IEngine engine, string elementData)
