@@ -14,7 +14,7 @@
         private const int DefaultWidth = 200;
         private const int ValueWidth = 150;
 
-        private IDmsElement dmsElement;
+        private Dictionary<string, object[]> tableData = new Dictionary<string, object[]>();
 
         public PopUpDialog(IEngine engine, string elementId) : base(engine)
         {
@@ -161,8 +161,8 @@
             var elementId = Convert.ToInt32(splittedElement[1]);
 
             var dms = engine.GetDms();
-            dmsElement = dms.GetElement(new DmsElementId(dmaId, elementId));
-            var tableData = (Dictionary<string, object[]>)dmsElement.GetTable(VideoPathTableId).GetData();
+            var dmsElement = dms.GetElement(new DmsElementId(dmaId, elementId));
+            tableData = (Dictionary<string, object[]>)dmsElement.GetTable(VideoPathTableId).GetData();
 
             if (tableData.Any())
             {
@@ -210,7 +210,6 @@
 
         internal void UpdateDialogData()
         {
-            var tableData = dmsElement.GetTable(VideoPathTableId).GetData();
             var matchedRow = tableData[VideoPathDropDown.Selected];
             FrameDelaySlider.Value = Convert.ToInt32(matchedRow[6]);
             VerticalDelaySlider.Value = Convert.ToInt32(matchedRow[7]);
