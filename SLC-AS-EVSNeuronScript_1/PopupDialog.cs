@@ -104,66 +104,65 @@
 
 		public Button CloseButton { get; set; }
 
+		private readonly Label VideoPathLabel = new Label { Text = "Video Path:" };
 
-		private Label VideoPathLabel = new Label { Text = "Video Path:" };
+		private readonly Label FrameDelayLabel = new Label { Text = "Frame Delay:" };
 
-		private Label FrameDelayLabel = new Label { Text = "Frame Delay:" };
+		private readonly Label VerticalDelayLabel = new Label { Text = "Vertical Delay:" };
 
-		private Label VerticalDelayLabel = new Label { Text = "Vertical Delay:" };
+		private readonly Label HorizontalDelayLabel = new Label { Text = "Horizontal Delay:" };
 
-		private Label HorizontalDelayLabel = new Label { Text = "Horizontal Delay:" };
+		private readonly Label DelayLabel = new Label { Style = TextStyle.Bold, Text = "Delay" };
 
-		private Label DelayLabel = new Label { Style = TextStyle.Bold, Text = "Delay" };
+		private readonly Label ColorCorrectionsLabel = new Label { Style = TextStyle.Bold, Text = "Color Corrections" };
 
-		private Label ColorCorrectionsLabel = new Label { Style = TextStyle.Bold, Text = "Color Corrections" };
+		private readonly Label GainRedLabel = new Label { Text = "Gain Red:" };
 
-		private Label GainRedLabel = new Label { Text = "Gain Red:" };
+		private readonly Label GainGreenLabel = new Label { Text = "Gain Green:" };
 
-		private Label GainGreenLabel = new Label { Text = "Gain Green:" };
+		private readonly Label GainBlueLabel = new Label { Text = "Gain Blue:" };
 
-		private Label GainBlueLabel = new Label { Text = "Gain Blue:" };
+		private readonly Label BlacklevelRedLabel = new Label { Text = "Blacklevel Red:" };
 
-		private Label BlacklevelRedLabel = new Label { Text = "Blacklevel Red:" };
+		private readonly Label BlacklevelGreenLabel = new Label { Text = "Blacklevel Green:" };
 
-		private Label BlacklevelGreenLabel = new Label { Text = "Blacklevel Green:" };
+		private readonly Label BlacklevelBlueLabel = new Label { Text = "Blacklevel Blue:" };
 
-		private Label BlacklevelBlueLabel = new Label { Text = "Blacklevel Blue:" };
+		private readonly Label FramesLabel = new Label { Text = "Frames" };
 
-		private Label FramesLabel = new Label { Text = "Frames" };
+		private readonly Label LinesLabel = new Label { Text = "Lines" };
 
-		private Label LinesLabel = new Label { Text = "Lines" };
+		private readonly Label PixelLabel = new Label { Text = "px" };
 
-		private Label PixelLabel = new Label { Text = "px" };
+		private readonly Label PercentageLabel = new Label { Text = "%" };
 
-		private Label PercentageLabel = new Label { Text = "%" };
+		private readonly Label Percentage2Label = new Label { Text = "%" };
 
-		private Label Percentage2Label = new Label { Text = "%" };
+		private readonly Label Percentage3Label = new Label { Text = "%" };
 
-		private Label Percentage3Label = new Label { Text = "%" };
+		private readonly Label BitLabel = new Label { Text = "b" };
 
-		private Label BitLabel = new Label { Text = "b" };
+		private readonly Label Bit2Label = new Label { Text = "b" };
 
-		private Label Bit2Label = new Label { Text = "b" };
+		private readonly Label Bit3Label = new Label { Text = "b" };
 
-		private Label Bit3Label = new Label { Text = "b" };
+		private readonly Numeric FrameDelaySlider = new Numeric { Minimum = 0, Maximum = 128, Width = ValueWidth };
 
-		private Numeric FrameDelaySlider = new Numeric { Minimum = 0, Maximum = 128, Width = ValueWidth };
+		private readonly Numeric VerticalDelaySlider = new Numeric { Minimum = 0, Maximum = 2160, Width = ValueWidth };
 
-		private Numeric VerticalDelaySlider = new Numeric { Minimum = 0, Maximum = 2160, Width = ValueWidth };
+		private readonly Numeric HorizontalDelaySlider = new Numeric { Minimum = 0, Maximum = 4124, Width = ValueWidth };
 
-		private Numeric HorizontalDelaySlider = new Numeric { Minimum = 0, Maximum = 4124, Width = ValueWidth };
+		private readonly Numeric GainRedSlider = new Numeric { Minimum = 50, Maximum = 150, Width = ValueWidth };
 
-		private Numeric GainRedSlider = new Numeric { Minimum = 50, Maximum = 150, Width = ValueWidth };
+		private readonly Numeric GainGreenSlider = new Numeric { Minimum = 50, Maximum = 150, Width = ValueWidth };
 
-		private Numeric GainGreenSlider = new Numeric { Minimum = 50, Maximum = 150, Width = ValueWidth };
+		private readonly Numeric GainBlueSlider = new Numeric { Minimum = 50, Maximum = 150, Width = ValueWidth };
 
-		private Numeric GainBlueSlider = new Numeric { Minimum = 50, Maximum = 150, Width = ValueWidth };
+		private readonly Numeric BlacklevelRedSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
 
-		private Numeric BlacklevelRedSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
+		private readonly Numeric BlacklevelGreenSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
 
-		private Numeric BlacklevelGreenSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
-
-		private Numeric BlacklevelBlueSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
+		private readonly Numeric BlacklevelBlueSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
 		#endregion
 
 		internal void InitializeControls(IEngine engine, string elementData)
