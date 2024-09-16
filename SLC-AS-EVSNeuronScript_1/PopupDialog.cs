@@ -3,137 +3,271 @@
 	using System;
 	using System.Collections.Generic;
 	using System.Linq;
+
 	using Skyline.DataMiner.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Core.DataMinerSystem.Common;
 	using Skyline.DataMiner.Utils.InteractiveAutomationScript;
 
 	public class PopUpDialog : Dialog
-    {
-        private const int VideoPathTableId = 2300;
-        private IDmsElement dmsElement;
+	{
+		private const int VideoPathTableId = 2300;
+		private const int DefaultWidth = 200;
+		private const int ValueWidth = 150;
 
-        public PopUpDialog(IEngine engine, string elementId) : base(engine)
-        {
-            // Set title
-            Title = "Connection Configuration";
+		private Dictionary<string, object[]> tableData = new Dictionary<string, object[]>();
 
-            // Init widgets
-            VideoPathLabel = new Label("Video Path");
-            VideoPathDropDown = new DropDown();
-            FrameDelayLabel = new Label("Frame Delay");
-            FrameDelayTextBox = new TextBox();
-            VerticalDelayLabel = new Label("Vertical Delay");
-            VerticalDelayTextBox = new TextBox();
-            HorizontalDelayLabel = new Label("Horizontal Delay");
-            HorizontalDelayTextBox = new TextBox();
-            ApplyButton = new Button("Apply");
+		public PopUpDialog(IEngine engine, string elementId) : base(engine)
+		{
+			// Set title
+			Title = "Connection Configuration";
 
-            // Define layout
-            AddWidget(VideoPathLabel, 0, 0);
-            AddWidget(VideoPathDropDown, 1, 0);
-            AddWidget(FrameDelayLabel, 2, 0);
-            AddWidget(FrameDelayTextBox, 3, 0);
-            AddWidget(VerticalDelayLabel, 4, 0);
-            AddWidget(VerticalDelayTextBox, 5, 0);
-            AddWidget(HorizontalDelayLabel, 6, 0);
-            AddWidget(HorizontalDelayTextBox, 7, 0);
-            AddWidget(ApplyButton, 8, 0);
+			// Init widgets
+			VideoPathDropDown = new DropDown();
+			ApplyButton = new Button("Apply");
+			DefaultSettingsButton = new Button("Reset to Default");
+			CloseButton = new Button("Close");
 
-            // Adjust width
-            VideoPathLabel.Width = 100;
-            VideoPathDropDown.Width = 100;
-            FrameDelayLabel.Width = 100;
-            FrameDelayTextBox.Width = 100;
-            VerticalDelayLabel.Width = 100;
-            VerticalDelayTextBox.Width = 100;
-            HorizontalDelayLabel.Width = 100;
-            HorizontalDelayTextBox.Width = 100;
-            ApplyButton.Width = 100;
+			// Define layout
+			var layoutRowPos = 0;
 
-            // Set Default data
-            SetDefaultData(engine, elementId);
-        }
+			AddWidget(VideoPathLabel, layoutRowPos, 0);
+			AddWidget(VideoPathDropDown, layoutRowPos, 1, rowSpan: 1, colSpan: 2);
+			AddWidget(DefaultSettingsButton, ++layoutRowPos, 1, rowSpan: 1, colSpan: 2);
 
-        public DropDown VideoPathDropDown { get; set; }
+			AddWidget(DelayLabel, ++layoutRowPos, 0);
+			AddWidget(FrameDelayLabel, ++layoutRowPos, 0);
+			AddWidget(FrameDelaySlider, layoutRowPos, 1);
+			AddWidget(FramesLabel, layoutRowPos, 2);
+			AddWidget(VerticalDelayLabel, ++layoutRowPos, 0);
+			AddWidget(VerticalDelaySlider, layoutRowPos, 1);
+			AddWidget(LinesLabel, layoutRowPos, 2);
+			AddWidget(HorizontalDelayLabel, ++layoutRowPos, 0);
+			AddWidget(HorizontalDelaySlider, layoutRowPos, 1);
+			AddWidget(PixelLabel, layoutRowPos, 2);
 
-        public Button ApplyButton { get; set; }
+			AddWidget(ColorCorrectionsLabel, ++layoutRowPos, 0);
+			AddWidget(GainRedLabel, ++layoutRowPos, 0);
+			AddWidget(GainRedSlider, layoutRowPos, 1);
+			AddWidget(PercentageLabel, layoutRowPos, 2);
+			AddWidget(GainGreenLabel, ++layoutRowPos, 0);
+			AddWidget(GainGreenSlider, layoutRowPos, 1);
+			AddWidget(Percentage2Label, layoutRowPos, 2);
+			AddWidget(GainBlueLabel, ++layoutRowPos, 0);
+			AddWidget(GainBlueSlider, layoutRowPos, 1);
+			AddWidget(Percentage3Label, layoutRowPos, 2);
+			AddWidget(BlacklevelRedLabel, ++layoutRowPos, 0);
+			AddWidget(BlacklevelRedSlider, layoutRowPos, 1);
+			AddWidget(BitLabel, layoutRowPos, 2);
+			AddWidget(BlacklevelGreenLabel, ++layoutRowPos, 0);
+			AddWidget(BlacklevelGreenSlider, layoutRowPos, 1);
+			AddWidget(Bit2Label, layoutRowPos, 2);
+			AddWidget(BlacklevelBlueLabel, ++layoutRowPos, 0);
+			AddWidget(BlacklevelBlueSlider, layoutRowPos, 1);
+			AddWidget(Bit3Label, layoutRowPos, 2);
 
-        private Label VideoPathLabel { get; set; }
+			AddWidget(new WhiteSpace(), ++layoutRowPos, 0);
+			AddWidget(ApplyButton, ++layoutRowPos, 0);
 
-        private Label FrameDelayLabel { get; set; }
+			AddWidget(new WhiteSpace(), ++layoutRowPos, 0);
+			AddWidget(CloseButton, ++layoutRowPos, 0);
 
-        private Label VerticalDelayLabel { get; set; }
+			// Adjust width
+			VideoPathLabel.Width = DefaultWidth;
 
-        private Label HorizontalDelayLabel { get; set; }
+			DelayLabel.Width = DefaultWidth;
+			FrameDelayLabel.Width = DefaultWidth;
+			VerticalDelayLabel.Width = DefaultWidth;
+			HorizontalDelayLabel.Width = DefaultWidth;
 
-        private TextBox FrameDelayTextBox { get; set; }
+			ColorCorrectionsLabel.Width = DefaultWidth;
+			GainRedLabel.Width = DefaultWidth;
+			GainGreenLabel.Width = DefaultWidth;
+			GainBlueLabel.Width = DefaultWidth;
+			BlacklevelRedLabel.Width = DefaultWidth;
+			BlacklevelGreenLabel.Width = DefaultWidth;
+			BlacklevelBlueLabel.Width = DefaultWidth;
 
-        private TextBox VerticalDelayTextBox { get; set; }
+			ApplyButton.Width = DefaultWidth;
+			CloseButton.Width = DefaultWidth;
 
-        private TextBox HorizontalDelayTextBox { get; set; }
+			// Set Default data
+			InitializeControls(engine, elementId);
+		}
 
-        internal void SetDefaultData(IEngine engine, string elementData)
-        {
-            var splittedElement = elementData.Split('/');
-            var dmaId = Convert.ToInt32(splittedElement[0]);
-            var elementId = Convert.ToInt32(splittedElement[1]);
+		#region Properties
+		public DropDown VideoPathDropDown { get; set; }
 
-            var dms = engine.GetDms();
-            dmsElement = dms.GetElement(new DmsElementId(dmaId, elementId));
-            var tableData = (Dictionary<string, object[]>)dmsElement.GetTable(VideoPathTableId).GetData();
+		public Button ApplyButton { get; set; }
 
-            if (tableData.Any())
-            {
-                var defaultRow = tableData.First();
-                this.VideoPathDropDown.Options = tableData.Keys;
-                this.VideoPathDropDown.Selected = defaultRow.Key;
-                this.FrameDelayTextBox.Text = Convert.ToString(defaultRow.Value[6]);
-                this.VerticalDelayTextBox.Text = Convert.ToString(defaultRow.Value[7]);
-                this.HorizontalDelayTextBox.Text = Convert.ToString(defaultRow.Value[8]);
+		public Button DefaultSettingsButton { get; set; }
 
-                this.VideoPathDropDown.IsEnabled = true;
-                this.FrameDelayTextBox.IsEnabled = true;
-                this.VerticalDelayTextBox.IsEnabled = true;
-                this.HorizontalDelayTextBox.IsEnabled = true;
-            }
-            else
-            {
-                this.VideoPathDropDown.Options = new List<string> { "Data Not Available" };
-                this.VideoPathDropDown.Selected = "Data Not Available";
-                this.FrameDelayTextBox.Text = "N/A";
-                this.VerticalDelayTextBox.Text = "N/A";
-                this.HorizontalDelayTextBox.Text = "N/A";
+		public Button CloseButton { get; set; }
 
-                this.VideoPathDropDown.IsEnabled = false;
-                this.FrameDelayTextBox.IsEnabled = false;
-                this.VerticalDelayTextBox.IsEnabled = false;
-                this.HorizontalDelayTextBox.IsEnabled = false;
-            }
-        }
 
-        internal void UpdateDialogData()
-        {
-            var newDropdownValue = this.VideoPathDropDown.Selected;
-            var tableData = dmsElement.GetTable(VideoPathTableId).GetData();
-            var matchedRow = tableData[newDropdownValue];
-            this.FrameDelayTextBox.Text = Convert.ToString(matchedRow[6]);
-            this.VerticalDelayTextBox.Text = Convert.ToString(matchedRow[7]);
-            this.HorizontalDelayTextBox.Text = Convert.ToString(matchedRow[8]);
-        }
+		private Label VideoPathLabel = new Label { Text = "Video Path:" };
 
-        internal void ProcessSelectedData(IEngine engine, string elementData)
-        {
-            var splittedElement = elementData.Split('/');
-            var dmaId = Convert.ToInt32(splittedElement[0]);
-            var elementId = Convert.ToInt32(splittedElement[1]);
+		private Label FrameDelayLabel = new Label { Text = "Frame Delay:" };
 
-            var element = engine.FindElement(dmaId, elementId);
+		private Label VerticalDelayLabel = new Label { Text = "Vertical Delay:" };
 
-            // Set values on table cells
-            element.SetParameterByPrimaryKey(2307, this.VideoPathDropDown.Selected, this.FrameDelayTextBox.Text);
-            element.SetParameterByPrimaryKey(2308, this.VideoPathDropDown.Selected, this.VerticalDelayTextBox.Text);
-            element.SetParameterByPrimaryKey(2309, this.VideoPathDropDown.Selected, this.HorizontalDelayTextBox.Text);
-        }
-    }
+		private Label HorizontalDelayLabel = new Label { Text = "Horizontal Delay:" };
+
+		private Label DelayLabel = new Label { Style = TextStyle.Bold, Text = "Delay" };
+
+		private Label ColorCorrectionsLabel = new Label { Style = TextStyle.Bold, Text = "Color Corrections" };
+
+		private Label GainRedLabel = new Label { Text = "Gain Red:" };
+
+		private Label GainGreenLabel = new Label { Text = "Gain Green:" };
+
+		private Label GainBlueLabel = new Label { Text = "Gain Blue:" };
+
+		private Label BlacklevelRedLabel = new Label { Text = "Blacklevel Red:" };
+
+		private Label BlacklevelGreenLabel = new Label { Text = "Blacklevel Green:" };
+
+		private Label BlacklevelBlueLabel = new Label { Text = "Blacklevel Blue:" };
+
+		private Label FramesLabel = new Label { Text = "Frames" };
+
+		private Label LinesLabel = new Label { Text = "Lines" };
+
+		private Label PixelLabel = new Label { Text = "px" };
+
+		private Label PercentageLabel = new Label { Text = "%" };
+
+		private Label Percentage2Label = new Label { Text = "%" };
+
+		private Label Percentage3Label = new Label { Text = "%" };
+
+		private Label BitLabel = new Label { Text = "b" };
+
+		private Label Bit2Label = new Label { Text = "b" };
+
+		private Label Bit3Label = new Label { Text = "b" };
+
+		private Numeric FrameDelaySlider = new Numeric { Minimum = 0, Maximum = 128, Width = ValueWidth };
+
+		private Numeric VerticalDelaySlider = new Numeric { Minimum = 0, Maximum = 2160, Width = ValueWidth };
+
+		private Numeric HorizontalDelaySlider = new Numeric { Minimum = 0, Maximum = 4124, Width = ValueWidth };
+
+		private Numeric GainRedSlider = new Numeric { Minimum = 50, Maximum = 150, Width = ValueWidth };
+
+		private Numeric GainGreenSlider = new Numeric { Minimum = 50, Maximum = 150, Width = ValueWidth };
+
+		private Numeric GainBlueSlider = new Numeric { Minimum = 50, Maximum = 150, Width = ValueWidth };
+
+		private Numeric BlacklevelRedSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
+
+		private Numeric BlacklevelGreenSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
+
+		private Numeric BlacklevelBlueSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
+		#endregion
+
+		internal void InitializeControls(IEngine engine, string elementData)
+		{
+			var splittedElement = elementData.Split('/');
+			var dmaId = Convert.ToInt32(splittedElement[0]);
+			var elementId = Convert.ToInt32(splittedElement[1]);
+
+			var dms = engine.GetDms();
+			var dmsElement = dms.GetElement(new DmsElementId(dmaId, elementId));
+			tableData = (Dictionary<string, object[]>)dmsElement.GetTable(VideoPathTableId).GetData();
+
+			if (tableData.Any())
+			{
+				var defaultRow = tableData.First();
+				VideoPathDropDown.Options = tableData.Keys;
+				VideoPathDropDown.Selected = defaultRow.Key;
+				FrameDelaySlider.Value = Convert.ToInt32(defaultRow.Value[6]);
+				VerticalDelaySlider.Value = Convert.ToInt32(defaultRow.Value[7]);
+				HorizontalDelaySlider.Value = Convert.ToInt32(defaultRow.Value[8]);
+				GainRedSlider.Value = Convert.ToInt32(defaultRow.Value[9]);
+				GainGreenSlider.Value = Convert.ToInt32(defaultRow.Value[10]);
+				GainBlueSlider.Value = Convert.ToInt32(defaultRow.Value[11]);
+				BlacklevelRedSlider.Value = Convert.ToInt32(defaultRow.Value[12]);
+				BlacklevelGreenSlider.Value = Convert.ToInt32(defaultRow.Value[13]);
+				BlacklevelBlueSlider.Value = Convert.ToInt32(defaultRow.Value[14]);
+
+				VideoPathDropDown.IsEnabled = true;
+				FrameDelaySlider.IsEnabled = true;
+				VerticalDelaySlider.IsEnabled = true;
+				HorizontalDelaySlider.IsEnabled = true;
+				GainRedSlider.IsEnabled = true;
+				GainGreenSlider.IsEnabled = true;
+				GainBlueSlider.IsEnabled = true;
+				BlacklevelRedSlider.IsEnabled = true;
+				BlacklevelGreenSlider.IsEnabled = true;
+				BlacklevelBlueSlider.IsEnabled = true;
+			}
+			else
+			{
+				VideoPathDropDown.Options = new List<string> { "Data Not Available" };
+				VideoPathDropDown.Selected = "Data Not Available";
+
+				VideoPathDropDown.IsEnabled = false;
+				FrameDelaySlider.IsEnabled = false;
+				VerticalDelaySlider.IsEnabled = false;
+				HorizontalDelaySlider.IsEnabled = false;
+				GainRedSlider.IsEnabled = false;
+				GainGreenSlider.IsEnabled = false;
+				GainBlueSlider.IsEnabled = false;
+				BlacklevelRedSlider.IsEnabled = false;
+				BlacklevelGreenSlider.IsEnabled = false;
+				BlacklevelBlueSlider.IsEnabled = false;
+			}
+		}
+
+		internal void SetDefaultData()
+		{
+			FrameDelaySlider.Value = 0;
+			VerticalDelaySlider.Value = 0;
+			HorizontalDelaySlider.Value = 0;
+
+			GainRedSlider.Value = 100;
+			GainGreenSlider.Value = 100;
+			GainBlueSlider.Value = 100;
+
+			BlacklevelBlueSlider.Value = 0;
+			BlacklevelGreenSlider.Value = 0;
+			BlacklevelBlueSlider.Value = 0;
+		}
+
+		internal void UpdateDialogData()
+		{
+			var matchedRow = tableData[VideoPathDropDown.Selected];
+			FrameDelaySlider.Value = Convert.ToInt32(matchedRow[6]);
+			VerticalDelaySlider.Value = Convert.ToInt32(matchedRow[7]);
+			HorizontalDelaySlider.Value = Convert.ToInt32(matchedRow[8]);
+			GainRedSlider.Value = Convert.ToInt32(matchedRow[9]);
+			GainGreenSlider.Value = Convert.ToInt32(matchedRow[10]);
+			GainBlueSlider.Value = Convert.ToInt32(matchedRow[11]);
+			BlacklevelRedSlider.Value = Convert.ToInt32(matchedRow[12]);
+			BlacklevelGreenSlider.Value = Convert.ToInt32(matchedRow[13]);
+			BlacklevelBlueSlider.Value = Convert.ToInt32(matchedRow[14]);
+		}
+
+		internal void ProcessSelectedData(IEngine engine, string elementData)
+		{
+			var splittedElement = elementData.Split('/');
+			var dmaId = Convert.ToInt32(splittedElement[0]);
+			var elementId = Convert.ToInt32(splittedElement[1]);
+
+			var element = engine.FindElement(dmaId, elementId);
+			var selectedVideo = VideoPathDropDown.Selected;
+
+			// Set values on table cells
+			element.SetParameterByPrimaryKey(2357, selectedVideo, FrameDelaySlider.Value);
+			element.SetParameterByPrimaryKey(2358, selectedVideo, VerticalDelaySlider.Value);
+			element.SetParameterByPrimaryKey(2359, selectedVideo, HorizontalDelaySlider.Value);
+			element.SetParameterByPrimaryKey(2360, selectedVideo, GainRedSlider.Value);
+			element.SetParameterByPrimaryKey(2361, selectedVideo, GainGreenSlider.Value);
+			element.SetParameterByPrimaryKey(2362, selectedVideo, GainBlueSlider.Value);
+			element.SetParameterByPrimaryKey(2363, selectedVideo, BlacklevelRedSlider.Value);
+			element.SetParameterByPrimaryKey(2364, selectedVideo, BlacklevelGreenSlider.Value);
+			element.SetParameterByPrimaryKey(2365, selectedVideo, BlacklevelBlueSlider.Value);
+		}
+	}
 }
