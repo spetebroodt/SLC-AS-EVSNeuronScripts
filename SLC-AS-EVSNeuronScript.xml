@@ -17,6 +17,9 @@
 		<ScriptParameter id="1" type="string" values="">
 			<Description>Element ID</Description>
 		</ScriptParameter>
+		<ScriptParameter id="2" type="string" values="">
+			<Description>Video Path ID</Description>
+		</ScriptParameter>
 	</Parameters>
 
 	<Script>
