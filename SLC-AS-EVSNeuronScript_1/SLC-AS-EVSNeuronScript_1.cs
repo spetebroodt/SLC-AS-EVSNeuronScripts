@@ -113,10 +113,9 @@ namespace SLC_AS_EVSNeuronScript_1
 		private void RunSafe(IEngine engine)
 		{
 			var elementId = GetOneDeserializedValue(engine.GetScriptParam("Element ID").Value);
-			var videoPathId = GetOneDeserializedValue(engine.GetScriptParam("Video Path ID").Value);
 
 			var controller = new InteractiveController(engine);
-			var dialog = new PopUpDialog(engine, elementId, videoPathId);
+			var dialog = new PopUpDialog(engine, elementId);
 
 			dialog.VideoPathDropDown.Changed += (sender, args) => dialog.UpdateDialogData();
 			dialog.ApplyButton.Pressed += (sender, args) => dialog.ProcessSelectedData(engine, elementId);

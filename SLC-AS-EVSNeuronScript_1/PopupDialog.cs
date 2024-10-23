@@ -17,7 +17,7 @@
 
         private Dictionary<string, object[]> tableData = new Dictionary<string, object[]>();
 
-        public PopUpDialog(IEngine engine, string elementId, string videoPathId) : base(engine)
+        public PopUpDialog(IEngine engine, string elementId) : base(engine)
         {
             // Set title
             Title = "Connection Configuration";
@@ -96,7 +96,7 @@
             CloseButton.Width = DefaultWidth;
 
             // Set Default data
-            InitializeControls(engine, elementId, videoPathId);
+            InitializeControls(engine, elementId);
         }
 
         private enum Status
@@ -177,7 +177,7 @@
         private readonly Numeric BlacklevelBlueSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
         #endregion
 
-        internal void InitializeControls(IEngine engine, string elementData, string videoPathId)
+        internal void InitializeControls(IEngine engine, string elementData/*, string videoPathId*/)
         {
             var splittedElement = elementData.Split('/');
             var dmaId = Convert.ToInt32(splittedElement[0]);
@@ -191,7 +191,7 @@
 
             if (tableData.Any())
             {
-                var defaultRow = tableData.First(x => x.Key.Equals(videoPathId));
+                var defaultRow = tableData.First();
                 VideoPathDropDown.Options = tableData.Keys;
                 VideoPathDropDown.Selected = defaultRow.Key;
                 FrameDelaySlider.Value = Convert.ToInt32(defaultRow.Value[6]);
@@ -204,15 +204,7 @@
                 BlacklevelGreenSlider.Value = Convert.ToInt32(defaultRow.Value[13]);
                 BlacklevelBlueSlider.Value = Convert.ToInt32(defaultRow.Value[14]);
 
-                EnableDisableWriteProperties(true);
-
-                if (ValidateRowStatus(defaultRow.Value))
-                {
-                    ErrorMessageLabel.IsVisible = true;
-                    EnableDisableWriteProperties(false);
-                    ApplyButton.IsEnabled = false;
-                    DefaultSettingsButton.IsEnabled = false;
-                }
+                ValidateVideoPathStatus(defaultRow.Value);
             }
             else
             {
@@ -220,30 +212,45 @@
                 VideoPathDropDown.Selected = "Data Not Available";
 
                 VideoPathDropDown.IsEnabled = false;
-                FrameDelaySlider.IsEnabled = false;
-                VerticalDelaySlider.IsEnabled = false;
-                HorizontalDelaySlider.IsEnabled = false;
-                GainRedSlider.IsEnabled = false;
-                GainGreenSlider.IsEnabled = false;
-                GainBlueSlider.IsEnabled = false;
-                BlacklevelRedSlider.IsEnabled = false;
-                BlacklevelGreenSlider.IsEnabled = false;
-                BlacklevelBlueSlider.IsEnabled = false;
+                EnableDisableWriteProperties(false);
             }
         }
 
-        internal void EnableDisableWriteProperties(bool value)
+        internal void UpdateDialogData()
         {
-            VideoPathDropDown.IsEnabled = value;
-            FrameDelaySlider.IsEnabled = value;
-            VerticalDelaySlider.IsEnabled = value;
-            HorizontalDelaySlider.IsEnabled = value;
-            GainRedSlider.IsEnabled = value;
-            GainGreenSlider.IsEnabled = value;
-            GainBlueSlider.IsEnabled = value;
-            BlacklevelRedSlider.IsEnabled = value;
-            BlacklevelGreenSlider.IsEnabled = value;
-            BlacklevelBlueSlider.IsEnabled = value;
+            var matchedRow = tableData[VideoPathDropDown.Selected];
+            FrameDelaySlider.Value = Convert.ToInt32(matchedRow[6]);
+            VerticalDelaySlider.Value = Convert.ToInt32(matchedRow[7]);
+            HorizontalDelaySlider.Value = Convert.ToInt32(matchedRow[8]);
+            GainRedSlider.Value = Convert.ToInt32(matchedRow[9]);
+            GainGreenSlider.Value = Convert.ToInt32(matchedRow[10]);
+            GainBlueSlider.Value = Convert.ToInt32(matchedRow[11]);
+            BlacklevelRedSlider.Value = Convert.ToInt32(matchedRow[12]);
+            BlacklevelGreenSlider.Value = Convert.ToInt32(matchedRow[13]);
+            BlacklevelBlueSlider.Value = Convert.ToInt32(matchedRow[14]);
+
+            ValidateVideoPathStatus(matchedRow);
+        }
+
+        internal void ProcessSelectedData(IEngine engine, string elementData)
+        {
+            var splittedElement = elementData.Split('/');
+            var dmaId = Convert.ToInt32(splittedElement[0]);
+            var elementId = Convert.ToInt32(splittedElement[1]);
+
+            var element = engine.FindElement(dmaId, elementId);
+            var selectedVideo = VideoPathDropDown.Selected;
+
+            // Set values on table cells
+            element.SetParameterByPrimaryKey(2357, selectedVideo, FrameDelaySlider.Value);
+            element.SetParameterByPrimaryKey(2358, selectedVideo, VerticalDelaySlider.Value);
+            element.SetParameterByPrimaryKey(2359, selectedVideo, HorizontalDelaySlider.Value);
+            element.SetParameterByPrimaryKey(2360, selectedVideo, GainRedSlider.Value);
+            element.SetParameterByPrimaryKey(2361, selectedVideo, GainGreenSlider.Value);
+            element.SetParameterByPrimaryKey(2362, selectedVideo, GainBlueSlider.Value);
+            element.SetParameterByPrimaryKey(2363, selectedVideo, BlacklevelRedSlider.Value);
+            element.SetParameterByPrimaryKey(2364, selectedVideo, BlacklevelGreenSlider.Value);
+            element.SetParameterByPrimaryKey(2365, selectedVideo, BlacklevelBlueSlider.Value);
         }
 
         internal void SetDefaultData()
@@ -261,49 +268,37 @@
             BlacklevelBlueSlider.Value = 0;
         }
 
-        internal void UpdateDialogData()
+        private void ValidateVideoPathStatus(object[] row)
         {
-            var matchedRow = tableData[VideoPathDropDown.Selected];
-            FrameDelaySlider.Value = Convert.ToInt32(matchedRow[6]);
-            VerticalDelaySlider.Value = Convert.ToInt32(matchedRow[7]);
-            HorizontalDelaySlider.Value = Convert.ToInt32(matchedRow[8]);
-            GainRedSlider.Value = Convert.ToInt32(matchedRow[9]);
-            GainGreenSlider.Value = Convert.ToInt32(matchedRow[10]);
-            GainBlueSlider.Value = Convert.ToInt32(matchedRow[11]);
-            BlacklevelRedSlider.Value = Convert.ToInt32(matchedRow[12]);
-            BlacklevelGreenSlider.Value = Convert.ToInt32(matchedRow[13]);
-            BlacklevelBlueSlider.Value = Convert.ToInt32(matchedRow[14]);
-        }
-
-        internal void ProcessSelectedData(IEngine engine, string elementData)
-        {
-            var splittedElement = elementData.Split('/');
-            var dmaId = Convert.ToInt32(splittedElement[0]);
-            var elementId = Convert.ToInt32(splittedElement[1]);
-
-            var element = engine.FindElement(dmaId, elementId);
-            var selectedVideo = VideoPathDropDown.Selected;
-
-            var matchedRow = tableData.FirstOrDefault(x => x.Key.Equals(selectedVideo)).Value;
-            if (ValidateRowStatus(matchedRow))
+            if (ValidateRowStatus(row))
             {
                 ErrorMessageLabel.IsVisible = true;
-                return;
+                EnableDisableWriteProperties(false);
             }
-
-            // Set values on table cells
-            element.SetParameterByPrimaryKey(2357, selectedVideo, FrameDelaySlider.Value);
-            element.SetParameterByPrimaryKey(2358, selectedVideo, VerticalDelaySlider.Value);
-            element.SetParameterByPrimaryKey(2359, selectedVideo, HorizontalDelaySlider.Value);
-            element.SetParameterByPrimaryKey(2360, selectedVideo, GainRedSlider.Value);
-            element.SetParameterByPrimaryKey(2361, selectedVideo, GainGreenSlider.Value);
-            element.SetParameterByPrimaryKey(2362, selectedVideo, GainBlueSlider.Value);
-            element.SetParameterByPrimaryKey(2363, selectedVideo, BlacklevelRedSlider.Value);
-            element.SetParameterByPrimaryKey(2364, selectedVideo, BlacklevelGreenSlider.Value);
-            element.SetParameterByPrimaryKey(2365, selectedVideo, BlacklevelBlueSlider.Value);
+            else
+            {
+                ErrorMessageLabel.IsVisible = false;
+                EnableDisableWriteProperties(true);
+            }
         }
 
-        internal bool ValidateRowStatus(object[] row)
+        private void EnableDisableWriteProperties(bool value)
+        {
+            FrameDelaySlider.IsEnabled = value;
+            VerticalDelaySlider.IsEnabled = value;
+            HorizontalDelaySlider.IsEnabled = value;
+            GainRedSlider.IsEnabled = value;
+            GainGreenSlider.IsEnabled = value;
+            GainBlueSlider.IsEnabled = value;
+            BlacklevelRedSlider.IsEnabled = value;
+            BlacklevelGreenSlider.IsEnabled = value;
+            BlacklevelBlueSlider.IsEnabled = value;
+
+            ApplyButton.IsEnabled = value;
+            DefaultSettingsButton.IsEnabled = value;
+        }
+
+        private bool ValidateRowStatus(object[] row)
         {
             return Convert.ToInt32(row[21/*Status*/]) == (int)Status.Off;
         }
