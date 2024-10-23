@@ -19,7 +19,7 @@ Color Corrections:
 - Blacklevel Green
 - Blacklevel Blue
 
-In case the selected Video Path has the "Gain" or "Gain State" column (depends on the connector) option Disabled/Off, the IAS will disable all options and show the following message: "Values cannot be set as the Gain status is not enabled."
+In case the selected Video Path has the "Gain" or "Gain State" column option Disabled/Off (depending on the connector), the IAS will disable all options and show the following message: "Values cannot be set as the Gain status is not enabled."
 
 This is how the IAS is displayed on an App:
 
