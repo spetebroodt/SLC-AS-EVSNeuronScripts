@@ -12,10 +12,15 @@
     public class PopUpDialog : Dialog
     {
         private const int VideoPathTableId = 2300;
+        private const int VideoPathColorCorrectionTableId = 2400;
         private const int DefaultWidth = 200;
         private const int ValueWidth = 150;
 
-        private Dictionary<string, object[]> tableData = new Dictionary<string, object[]>();
+        private const string NeuronCompress = "EVS Neuron NAP - COMPRESS";
+        private const string NeuronConvert = "EVS Neuron NAP - CONVERT";
+
+        private Dictionary<string, List<VideoPathData>> videoPathData = new Dictionary<string, List<VideoPathData>>();
+        private bool isNeuronConvert;
 
         public PopUpDialog(IEngine engine, string elementId) : base(engine)
         {
@@ -177,57 +182,58 @@
         private readonly Numeric BlacklevelBlueSlider = new Numeric { Minimum = -128, Maximum = 127, Width = ValueWidth };
         #endregion
 
-        internal void InitializeControls(IEngine engine, string elementData/*, string videoPathId*/)
+        internal void InitializeControls(IEngine engine, string elementData)
         {
-            var splittedElement = elementData.Split('/');
-            var dmaId = Convert.ToInt32(splittedElement[0]);
-            var elementId = Convert.ToInt32(splittedElement[1]);
-
-            var dms = engine.GetDms();
-            var dmsElement = dms.GetElement(new DmsElementId(dmaId, elementId));
-            tableData = (Dictionary<string, object[]>)dmsElement.GetTable(VideoPathTableId).GetData();
+            GetTableData(engine, elementData);
 
             ErrorMessageLabel.IsVisible = false;
 
-            if (tableData.Any())
+            if (videoPathData.Any())
             {
-                var defaultRow = tableData.First();
-                VideoPathDropDown.Options = tableData.Keys;
-                VideoPathDropDown.Selected = defaultRow.Key;
-                FrameDelaySlider.Value = Convert.ToInt32(defaultRow.Value[6]);
-                VerticalDelaySlider.Value = Convert.ToInt32(defaultRow.Value[7]);
-                HorizontalDelaySlider.Value = Convert.ToInt32(defaultRow.Value[8]);
-                GainRedSlider.Value = Convert.ToInt32(defaultRow.Value[9]);
-                GainGreenSlider.Value = Convert.ToInt32(defaultRow.Value[10]);
-                GainBlueSlider.Value = Convert.ToInt32(defaultRow.Value[11]);
-                BlacklevelRedSlider.Value = Convert.ToInt32(defaultRow.Value[12]);
-                BlacklevelGreenSlider.Value = Convert.ToInt32(defaultRow.Value[13]);
-                BlacklevelBlueSlider.Value = Convert.ToInt32(defaultRow.Value[14]);
+                var rows = isNeuronConvert ? videoPathData[NeuronConvert] : videoPathData[NeuronCompress];
 
-                ValidateVideoPathStatus(defaultRow.Value);
+                if (!rows.Any())
+                {
+                    SetDataNotAvailable();
+                    return;
+                }
+
+                var defaultRow = rows[0];
+                VideoPathDropDown.Options = rows.Select(x => x.Key).ToList();
+                VideoPathDropDown.Selected = defaultRow.Key;
+                FrameDelaySlider.Value = defaultRow.FrameDelay;
+                VerticalDelaySlider.Value = defaultRow.VerticalDelay;
+                HorizontalDelaySlider.Value = defaultRow.HorizontalDelay;
+                GainRedSlider.Value = defaultRow.GainRed;
+                GainGreenSlider.Value = defaultRow.GainGreen;
+                GainBlueSlider.Value = defaultRow.GainBlue;
+                BlacklevelRedSlider.Value = defaultRow.BlackLevelRed;
+                BlacklevelGreenSlider.Value = defaultRow.BlackLevelGreen;
+                BlacklevelBlueSlider.Value = defaultRow.BlackLevelBlue;
+
+                ValidateVideoPathStatus(defaultRow);
             }
             else
             {
-                VideoPathDropDown.Options = new List<string> { "Data Not Available" };
-                VideoPathDropDown.Selected = "Data Not Available";
-
-                VideoPathDropDown.IsEnabled = false;
-                EnableDisableWriteProperties(false);
+                SetDataNotAvailable();
             }
         }
 
         internal void UpdateDialogData()
         {
-            var matchedRow = tableData[VideoPathDropDown.Selected];
-            FrameDelaySlider.Value = Convert.ToInt32(matchedRow[6]);
-            VerticalDelaySlider.Value = Convert.ToInt32(matchedRow[7]);
-            HorizontalDelaySlider.Value = Convert.ToInt32(matchedRow[8]);
-            GainRedSlider.Value = Convert.ToInt32(matchedRow[9]);
-            GainGreenSlider.Value = Convert.ToInt32(matchedRow[10]);
-            GainBlueSlider.Value = Convert.ToInt32(matchedRow[11]);
-            BlacklevelRedSlider.Value = Convert.ToInt32(matchedRow[12]);
-            BlacklevelGreenSlider.Value = Convert.ToInt32(matchedRow[13]);
-            BlacklevelBlueSlider.Value = Convert.ToInt32(matchedRow[14]);
+            var matchedRow = isNeuronConvert ?
+                videoPathData[NeuronConvert].First(x => x.Key.Equals(VideoPathDropDown.Selected)) :
+                videoPathData[NeuronCompress].First(x => x.Key.Equals(VideoPathDropDown.Selected));
+
+            FrameDelaySlider.Value = matchedRow.FrameDelay;
+            VerticalDelaySlider.Value = matchedRow.VerticalDelay;
+            HorizontalDelaySlider.Value = matchedRow.HorizontalDelay;
+            GainRedSlider.Value = matchedRow.GainRed;
+            GainGreenSlider.Value = matchedRow.GainGreen;
+            GainBlueSlider.Value = matchedRow.GainBlue;
+            BlacklevelRedSlider.Value = matchedRow.BlackLevelRed;
+            BlacklevelGreenSlider.Value = matchedRow.BlackLevelGreen;
+            BlacklevelBlueSlider.Value = matchedRow.BlackLevelBlue;
 
             ValidateVideoPathStatus(matchedRow);
         }
@@ -242,15 +248,30 @@
             var selectedVideo = VideoPathDropDown.Selected;
 
             // Set values on table cells
-            element.SetParameterByPrimaryKey(2357, selectedVideo, FrameDelaySlider.Value);
-            element.SetParameterByPrimaryKey(2358, selectedVideo, VerticalDelaySlider.Value);
-            element.SetParameterByPrimaryKey(2359, selectedVideo, HorizontalDelaySlider.Value);
-            element.SetParameterByPrimaryKey(2360, selectedVideo, GainRedSlider.Value);
-            element.SetParameterByPrimaryKey(2361, selectedVideo, GainGreenSlider.Value);
-            element.SetParameterByPrimaryKey(2362, selectedVideo, GainBlueSlider.Value);
-            element.SetParameterByPrimaryKey(2363, selectedVideo, BlacklevelRedSlider.Value);
-            element.SetParameterByPrimaryKey(2364, selectedVideo, BlacklevelGreenSlider.Value);
-            element.SetParameterByPrimaryKey(2365, selectedVideo, BlacklevelBlueSlider.Value);
+            if (isNeuronConvert)
+            {
+                element.SetParameterByPrimaryKey(2357, selectedVideo, FrameDelaySlider.Value);
+                element.SetParameterByPrimaryKey(2358, selectedVideo, VerticalDelaySlider.Value);
+                element.SetParameterByPrimaryKey(2359, selectedVideo, HorizontalDelaySlider.Value);
+                element.SetParameterByPrimaryKey(2360, selectedVideo, GainRedSlider.Value);
+                element.SetParameterByPrimaryKey(2361, selectedVideo, GainGreenSlider.Value);
+                element.SetParameterByPrimaryKey(2362, selectedVideo, GainBlueSlider.Value);
+                element.SetParameterByPrimaryKey(2363, selectedVideo, BlacklevelRedSlider.Value);
+                element.SetParameterByPrimaryKey(2364, selectedVideo, BlacklevelGreenSlider.Value);
+                element.SetParameterByPrimaryKey(2365, selectedVideo, BlacklevelBlueSlider.Value);
+            }
+            else
+            {
+                element.SetParameterByPrimaryKey(2357, selectedVideo, FrameDelaySlider.Value);
+                element.SetParameterByPrimaryKey(2358, selectedVideo, VerticalDelaySlider.Value);
+                element.SetParameterByPrimaryKey(2359, selectedVideo, HorizontalDelaySlider.Value);
+                element.SetParameterByPrimaryKey(2454, selectedVideo, GainRedSlider.Value);
+                element.SetParameterByPrimaryKey(2455, selectedVideo, GainGreenSlider.Value);
+                element.SetParameterByPrimaryKey(2456, selectedVideo, GainBlueSlider.Value);
+                element.SetParameterByPrimaryKey(2460, selectedVideo, BlacklevelRedSlider.Value);
+                element.SetParameterByPrimaryKey(2461, selectedVideo, BlacklevelGreenSlider.Value);
+                element.SetParameterByPrimaryKey(2462, selectedVideo, BlacklevelBlueSlider.Value);
+            }
         }
 
         internal void SetDefaultData()
@@ -268,16 +289,92 @@
             BlacklevelBlueSlider.Value = 0;
         }
 
-        private void ValidateVideoPathStatus(object[] row)
+        private void SetDataNotAvailable()
         {
-            if (ValidateRowStatus(row))
+            VideoPathDropDown.Options = new List<string> { "Data Not Available" };
+            VideoPathDropDown.Selected = "Data Not Available";
+
+            VideoPathDropDown.IsEnabled = false;
+            EnableDisableWriteProperties(false);
+        }
+
+        private void GetTableData(IEngine engine, string elementData)
+        {
+            var splittedElement = elementData.Split('/');
+            var dmaId = Convert.ToInt32(splittedElement[0]);
+            var elementId = Convert.ToInt32(splittedElement[1]);
+
+            var dms = engine.GetDms();
+            var dmsElement = dms.GetElement(new DmsElementId(dmaId, elementId));
+            isNeuronConvert = dmsElement.Protocol.Name.Equals(NeuronConvert);
+            if (isNeuronConvert)
             {
-                ErrorMessageLabel.IsVisible = true;
+                videoPathData.Add(NeuronConvert, new List<VideoPathData>());
+                var tableData = dmsElement.GetTable(VideoPathTableId).GetData();
+                foreach (var row in tableData.Values)
+                {
+                    videoPathData[NeuronConvert].Add(new VideoPathData
+                    {
+                        Key = Convert.ToString(row[0]),
+                        FrameDelay = Convert.ToInt32(row[6]),
+                        VerticalDelay = Convert.ToInt32(row[7]),
+                        HorizontalDelay = Convert.ToInt32(row[8]),
+                        GainRed = Convert.ToInt32(row[9]),
+                        GainGreen = Convert.ToInt32(row[10]),
+                        GainBlue = Convert.ToInt32(row[11]),
+                        BlackLevelRed = Convert.ToInt32(row[12]),
+                        BlackLevelGreen = Convert.ToInt32(row[13]),
+                        BlackLevelBlue = Convert.ToInt32(row[14]),
+                        Status = Convert.ToInt32(row[21]),
+                    });
+                }
+            }
+            else
+            {
+                videoPathData.Add(NeuronCompress, new List<VideoPathData>());
+                var tableData = dmsElement.GetTable(VideoPathTableId).GetData();
+
+                var list = new List<VideoPathData>();
+                foreach (var row in tableData.Values)
+                {
+                    list.Add(new VideoPathData
+                    {
+                        Key = Convert.ToString(row[0]),
+                        FrameDelay = Convert.ToInt32(row[5]),
+                        VerticalDelay = Convert.ToInt32(row[6]),
+                        HorizontalDelay = Convert.ToInt32(row[7]),
+                    });
+                }
+
+                tableData = dmsElement.GetTable(VideoPathColorCorrectionTableId).GetData();
+                foreach (var row in tableData.Values)
+                {
+                    var key = Convert.ToString(row[0]);
+                    if (list.Exists(x => x.Key.Equals(key)))
+                    {
+                        var matchedRow = list.Find(x => x.Key.Equals(key));
+                        matchedRow.GainRed = Convert.ToInt32(row[3]);
+                        matchedRow.GainGreen = Convert.ToInt32(row[4]);
+                        matchedRow.GainBlue = Convert.ToInt32(row[5]);
+                        matchedRow.BlackLevelRed = Convert.ToInt32(row[9]);
+                        matchedRow.BlackLevelGreen = Convert.ToInt32(row[10]);
+                        matchedRow.BlackLevelBlue = Convert.ToInt32(row[11]);
+                        matchedRow.Status = Convert.ToInt32(row[2]);
+                    }
+                }
+
+                videoPathData[NeuronCompress].AddRange(list);
+            }
+        }
+
+        private void ValidateVideoPathStatus(VideoPathData row)
+        {
+            if (row.Status == (int)Status.Off)
+            {
                 EnableDisableWriteProperties(false);
             }
             else
             {
-                ErrorMessageLabel.IsVisible = false;
                 EnableDisableWriteProperties(true);
             }
         }
@@ -296,11 +393,33 @@
 
             ApplyButton.IsEnabled = value;
             DefaultSettingsButton.IsEnabled = value;
-        }
 
-        private bool ValidateRowStatus(object[] row)
-        {
-            return Convert.ToInt32(row[21/*Status*/]) == (int)Status.Off;
+            ErrorMessageLabel.IsVisible = !value;
         }
+    }
+
+    public class VideoPathData
+    {
+        public string Key { get; set; }
+
+        public int FrameDelay { get; set; }
+
+        public int VerticalDelay { get; set; }
+
+        public int HorizontalDelay { get; set; }
+
+        public int GainRed { get; set; }
+
+        public int GainGreen { get; set; }
+
+        public int GainBlue { get; set; }
+
+        public int BlackLevelRed { get; set; }
+
+        public int BlackLevelGreen { get; set; }
+
+        public int BlackLevelBlue { get; set; }
+
+        public int Status { get; set; }
     }
 }
