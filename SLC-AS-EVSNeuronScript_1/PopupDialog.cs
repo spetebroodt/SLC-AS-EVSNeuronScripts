@@ -21,6 +21,7 @@
 
         private Dictionary<string, List<VideoPathData>> videoPathData = new Dictionary<string, List<VideoPathData>>();
         private bool isNeuronConvert;
+        private bool GainStatusOff;
 
         public PopUpDialog(IEngine engine, string elementId) : base(engine)
         {
@@ -52,6 +53,9 @@
             AddWidget(PixelLabel, layoutRowPos, 2);
 
             AddWidget(ColorCorrectionsLabel, ++layoutRowPos, 0);
+            AddWidget(ErrorMessageLabel, ++layoutRowPos, 0, 1, 2);
+
+            AddWidget(GainLabel, ++layoutRowPos, 0);
             AddWidget(GainRedLabel, ++layoutRowPos, 0);
             AddWidget(GainRedSlider, layoutRowPos, 1);
             AddWidget(PercentageLabel, layoutRowPos, 2);
@@ -61,6 +65,7 @@
             AddWidget(GainBlueLabel, ++layoutRowPos, 0);
             AddWidget(GainBlueSlider, layoutRowPos, 1);
             AddWidget(Percentage3Label, layoutRowPos, 2);
+            AddWidget(BlacklevelLabel, ++layoutRowPos, 0);
             AddWidget(BlacklevelRedLabel, ++layoutRowPos, 0);
             AddWidget(BlacklevelRedSlider, layoutRowPos, 1);
             AddWidget(BitLabel, layoutRowPos, 2);
@@ -70,9 +75,6 @@
             AddWidget(BlacklevelBlueLabel, ++layoutRowPos, 0);
             AddWidget(BlacklevelBlueSlider, layoutRowPos, 1);
             AddWidget(Bit3Label, layoutRowPos, 2);
-
-            AddWidget(new WhiteSpace(), ++layoutRowPos, 0);
-            AddWidget(ErrorMessageLabel, ++layoutRowPos, 0, 1, 2);
 
             AddWidget(new WhiteSpace(), ++layoutRowPos, 0);
             AddWidget(ApplyButton, ++layoutRowPos, 0);
@@ -121,27 +123,31 @@
 
         private readonly Label VideoPathLabel = new Label { Text = "Video Path:" };
 
+        private readonly Label DelayLabel = new Label { Style = TextStyle.Bold, Text = "Frame Sync" };
+
         private readonly Label FrameDelayLabel = new Label { Text = "Frame Delay:" };
 
         private readonly Label VerticalDelayLabel = new Label { Text = "Vertical Delay:" };
 
         private readonly Label HorizontalDelayLabel = new Label { Text = "Horizontal Delay:" };
 
-        private readonly Label DelayLabel = new Label { Style = TextStyle.Bold, Text = "Delay" };
-
         private readonly Label ColorCorrectionsLabel = new Label { Style = TextStyle.Bold, Text = "Color Corrections" };
 
-        private readonly Label GainRedLabel = new Label { Text = "Gain Red:" };
+        private readonly Label GainLabel = new Label { Style = TextStyle.Heading, Text = "Gain" };
 
-        private readonly Label GainGreenLabel = new Label { Text = "Gain Green:" };
+        private readonly Label GainRedLabel = new Label { Text = "Red:" };
 
-        private readonly Label GainBlueLabel = new Label { Text = "Gain Blue:" };
+        private readonly Label GainGreenLabel = new Label { Text = "Green:" };
 
-        private readonly Label BlacklevelRedLabel = new Label { Text = "Blacklevel Red:" };
+        private readonly Label GainBlueLabel = new Label { Text = "Blue:" };
 
-        private readonly Label BlacklevelGreenLabel = new Label { Text = "Blacklevel Green:" };
+        private readonly Label BlacklevelLabel = new Label { Style = TextStyle.Heading, Text = "Black Level" };
 
-        private readonly Label BlacklevelBlueLabel = new Label { Text = "Blacklevel Blue:" };
+        private readonly Label BlacklevelRedLabel = new Label { Text = "Red:" };
+
+        private readonly Label BlacklevelGreenLabel = new Label { Text = "Green:" };
+
+        private readonly Label BlacklevelBlueLabel = new Label { Text = "Blue:" };
 
         private readonly Label FramesLabel = new Label { Text = "Frames" };
 
@@ -253,24 +259,31 @@
                 element.SetParameterByPrimaryKey(2357, selectedVideo, FrameDelaySlider.Value);
                 element.SetParameterByPrimaryKey(2358, selectedVideo, VerticalDelaySlider.Value);
                 element.SetParameterByPrimaryKey(2359, selectedVideo, HorizontalDelaySlider.Value);
-                element.SetParameterByPrimaryKey(2360, selectedVideo, GainRedSlider.Value);
-                element.SetParameterByPrimaryKey(2361, selectedVideo, GainGreenSlider.Value);
-                element.SetParameterByPrimaryKey(2362, selectedVideo, GainBlueSlider.Value);
-                element.SetParameterByPrimaryKey(2363, selectedVideo, BlacklevelRedSlider.Value);
-                element.SetParameterByPrimaryKey(2364, selectedVideo, BlacklevelGreenSlider.Value);
-                element.SetParameterByPrimaryKey(2365, selectedVideo, BlacklevelBlueSlider.Value);
+
+                if (!GainStatusOff)
+                {
+                    element.SetParameterByPrimaryKey(2360, selectedVideo, GainRedSlider.Value);
+                    element.SetParameterByPrimaryKey(2361, selectedVideo, GainGreenSlider.Value);
+                    element.SetParameterByPrimaryKey(2362, selectedVideo, GainBlueSlider.Value);
+                    element.SetParameterByPrimaryKey(2363, selectedVideo, BlacklevelRedSlider.Value);
+                    element.SetParameterByPrimaryKey(2364, selectedVideo, BlacklevelGreenSlider.Value);
+                    element.SetParameterByPrimaryKey(2365, selectedVideo, BlacklevelBlueSlider.Value);
+                }
             }
             else
             {
                 element.SetParameterByPrimaryKey(2357, selectedVideo, FrameDelaySlider.Value);
                 element.SetParameterByPrimaryKey(2358, selectedVideo, VerticalDelaySlider.Value);
                 element.SetParameterByPrimaryKey(2359, selectedVideo, HorizontalDelaySlider.Value);
-                element.SetParameterByPrimaryKey(2454, selectedVideo, GainRedSlider.Value);
-                element.SetParameterByPrimaryKey(2455, selectedVideo, GainGreenSlider.Value);
-                element.SetParameterByPrimaryKey(2456, selectedVideo, GainBlueSlider.Value);
-                element.SetParameterByPrimaryKey(2460, selectedVideo, BlacklevelRedSlider.Value);
-                element.SetParameterByPrimaryKey(2461, selectedVideo, BlacklevelGreenSlider.Value);
-                element.SetParameterByPrimaryKey(2462, selectedVideo, BlacklevelBlueSlider.Value);
+                if (!GainStatusOff)
+                {
+                    element.SetParameterByPrimaryKey(2454, selectedVideo, GainRedSlider.Value);
+                    element.SetParameterByPrimaryKey(2455, selectedVideo, GainGreenSlider.Value);
+                    element.SetParameterByPrimaryKey(2456, selectedVideo, GainBlueSlider.Value);
+                    element.SetParameterByPrimaryKey(2460, selectedVideo, BlacklevelRedSlider.Value);
+                    element.SetParameterByPrimaryKey(2461, selectedVideo, BlacklevelGreenSlider.Value);
+                    element.SetParameterByPrimaryKey(2462, selectedVideo, BlacklevelBlueSlider.Value);
+                }
             }
         }
 
@@ -280,13 +293,16 @@
             VerticalDelaySlider.Value = 0;
             HorizontalDelaySlider.Value = 0;
 
-            GainRedSlider.Value = 100;
-            GainGreenSlider.Value = 100;
-            GainBlueSlider.Value = 100;
+            if (!GainStatusOff)
+            {
+                GainRedSlider.Value = 100;
+                GainGreenSlider.Value = 100;
+                GainBlueSlider.Value = 100;
 
-            BlacklevelBlueSlider.Value = 0;
-            BlacklevelGreenSlider.Value = 0;
-            BlacklevelBlueSlider.Value = 0;
+                BlacklevelBlueSlider.Value = 0;
+                BlacklevelGreenSlider.Value = 0;
+                BlacklevelBlueSlider.Value = 0;
+            }
         }
 
         private void SetDataNotAvailable()
@@ -369,7 +385,8 @@
 
         private void ValidateVideoPathStatus(VideoPathData row)
         {
-            if (row.Status == (int)Status.Off)
+            GainStatusOff = row.Status == (int)Status.Off;
+            if (GainStatusOff)
             {
                 EnableDisableWriteProperties(false);
             }
@@ -381,18 +398,12 @@
 
         private void EnableDisableWriteProperties(bool value)
         {
-            FrameDelaySlider.IsEnabled = value;
-            VerticalDelaySlider.IsEnabled = value;
-            HorizontalDelaySlider.IsEnabled = value;
             GainRedSlider.IsEnabled = value;
             GainGreenSlider.IsEnabled = value;
             GainBlueSlider.IsEnabled = value;
             BlacklevelRedSlider.IsEnabled = value;
             BlacklevelGreenSlider.IsEnabled = value;
             BlacklevelBlueSlider.IsEnabled = value;
-
-            ApplyButton.IsEnabled = value;
-            DefaultSettingsButton.IsEnabled = value;
 
             ErrorMessageLabel.IsVisible = !value;
         }
